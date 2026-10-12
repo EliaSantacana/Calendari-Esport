@@ -50,6 +50,21 @@ th{color:var(--mute);font-weight:600}
 .wrap{overflow-x:auto}
 .box{margin-top:22px}
 .box h3{font-size:1.15rem}
+.timer{margin-bottom:16px}
+.tp{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.trow{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.trow label{display:flex;gap:6px;align-items:center;color:var(--mute);font-size:.9rem}
+.trow input,.trow select{font:inherit;width:64px;padding:4px 6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.go,.tb button{font:inherit;font-weight:600;border:0;border-radius:12px;padding:10px 16px;cursor:pointer;background:var(--ink);color:var(--bg)}
+.go{margin-left:auto}
+.tb{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.tb button{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+.tn,.tl{margin:6px 0 0;color:var(--mute);font-size:.88rem}
+.run h2{font-size:1.4rem}
+.run.w{background:var(--fzbg)}.run.r{background:var(--rsbg)}.run.c{background:var(--rnbg)}
+.big{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:4rem;line-height:1.1;margin:6px 0}
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ink)}
+
 </style>
 </head>
 <body>
@@ -57,6 +72,7 @@ th{color:var(--mute);font-weight:600}
 <h1>Mi semana de entrenamiento</h1>
 <p class="sub">Toca un día para ver qué hacer, paso a paso. Marca cada paso al terminarlo. En los días de fuerza puedes cambiar cualquier ejercicio con su selector. En los dibujos, el naranja marca el músculo que trabajas y la flecha, el movimiento.</p>
 <div class="strip" id="strip" role="tablist" aria-label="Días de la semana"></div>
+<section class="timer" id="timer"></section>
 <section class="day" id="day" aria-live="polite"></section>
 
 <div class="box">
@@ -201,6 +217,53 @@ const LIB={
 function sel(di,m,def){try{const v=localStorage.getItem('x'+di+'-'+m);return v&&LIB[v]?v:def}catch(e){return def}}
 function swap(di,m,v,def){try{v===def?localStorage.removeItem('x'+di+'-'+m):localStorage.setItem('x'+di+'-'+m,v)}catch(e){}}
 function selHTML(x){let g='',o='';for(const n in LIB){if(LIB[n][2]!==g){if(g)o+='</optgroup>';g=LIB[n][2];o+=`<optgroup label='${g}'>`}o+=`<option${n===x.t?' selected':''}>${n}</option>`}return `<select class='sw' data-di='${x.di}' data-m='${x.m}' aria-label='Cambiar ejercicio'>${o}</optgroup></select>`}
+const RUN=[[[7,2],[6,4]],[[8,2],[7,4]],[[6,3],[6,5]],[[7,3],[5,6]]];
+const T={started:false,done:false,on:false,seq:[],i:0,left:0,end:0,tot:0,last:0,day:0,ls:0};
+const gv=(k,d)=>{try{return localStorage.getItem(k)||d}catch(e){return d}};
+const sv=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const clamp=(v,a,b,d)=>Math.min(b,Math.max(a,+v||d));
+const opt=()=>[clamp(gv('tw','40'),10,180,40),clamp(gv('tr','75'),15,240,75),clamp(gv('tk','1'),1,4,1)];
+const mmss=s=>{s=Math.max(0,Math.round(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+const hhmm=d=>d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+function beep(f,d){try{const c=T.ac||(T.ac=new (window.AudioContext||window.webkitAudioContext)()),o=c.createOscillator(),g=c.createGain();o.frequency.value=f;g.gain.value=.15;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+d)}catch(e){}}
+function build(di,W,R,wk){
+ const d=DAYS[di],S=steps(d),q=[];
+ if(d.type==='fz'){
+  q.push({n:'Calentamiento',s:300,k:'c',x:'Bici o cinta suave y movilidad'});
+  S.forEach((x,j)=>{if(x.m===undefined)return;const n=parseInt(x.d)||3;
+   for(let k=1;k<=n;k++){q.push({n:x.t,s:W,k:'w',x:'Serie '+k+' de '+n+' · '+x.d.split(' · ')[0].replace(/^\d+ × /,'').replace(/^(\d+(-\d+)?)$/,'$1 repeticiones'),f:k===n?j:undefined});q.push({n:'Descanso',s:R,k:'r',x:'Respira y bebe agua'})}});
+  q.pop();q.push({n:'Vuelta a la calma',s:300,k:'c',x:'Estiramientos suaves'});
+ }else{
+  const [n,m]=RUN[wk-1][d.k==='M'?0:1];
+  q.push({n:'Calentamiento',s:300,k:'c',x:'Andar a paso ligero'});
+  for(let i=1;i<=n;i++){q.push({n:'Trotar suave',s:m*60,k:'w',x:'Intervalo '+i+' de '+n});q.push({n:'Andar',s:60,k:'r',x:'Recupera el aliento'})}
+  q.pop();q.push({n:'Vuelta a la calma',s:300,k:'c',x:'Andar 5 min y estirar'});
+ }
+ return q}
+function tPanel(){const el=document.getElementById('timer');
+ if(T.started&&!T.done)return drawRun();
+ if(T.done)return drawEnd();
+ const d=DAYS[cur];
+ if(d.type==='rs'){el.innerHTML='';return}
+ const fz=d.type==='fz',tw=gv('tw','40'),tr=gv('tr','75'),tk=gv('tk','1');
+ el.innerHTML=`<div class='tp'><div class='trow'><strong>Cronómetro</strong>`+(fz?`<label>Trabajo <input id='tw' type='number' min='10' max='180' value='${tw}'> s</label><label>Descanso <input id='tr' type='number' min='15' max='240' value='${tr}'> s</label>`:`<label>Semana <select id='tk'>${[1,2,3,4].map(n=>`<option${n==tk?' selected':''}>${n}</option>`).join('')}</select></label>`)+`<button id='tgo' class='go'>Iniciar entrenamiento</button></div><p class='tn' id='test'></p></div>`;
+ const est=()=>{const q=build(cur,...opt());document.getElementById('test').textContent='Duración estimada: '+Math.round(q.reduce((a,p)=>a+p.s,0)/60)+' min · '+q.length+' fases'};
+ el.querySelectorAll('input,select').forEach(i=>i.onchange=()=>{sv(i.id,i.value);est()});
+ est();document.getElementById('tgo').onclick=start}
+function start(){const q=build(cur,...opt()),n=Date.now();Object.assign(T,{started:true,done:false,on:true,seq:q,i:0,day:cur,left:q[0].s*1000,end:n+q[0].s*1000,last:n,tot:0,ls:0,t0:new Date()});beep(880,.25);try{navigator.wakeLock.request('screen').then(w=>T.wl=w).catch(()=>{})}catch(e){}tPanel()}
+function drawRun(){const p=T.seq[T.i],nx=T.seq[T.i+1],d=DAYS[T.day];
+ document.getElementById('timer').innerHTML=`<div class='tp run ${p.k}'><p class='tl'>${d.n}: ${d.name} · fase ${T.i+1} de ${T.seq.length}${T.on?'':' · en pausa'}</p><h2>${p.n}</h2><p class='tn'>${p.x}</p><div class='big' id='tm'></div><div class='bar'><i id='tbar'></i></div><p class='tl'>${nx?'Siguiente: '+nx.n+(nx.k==='w'?' · '+nx.x:''):'Última fase'}</p><p class='tl'>Tiempo total <b id='tt'></b> · Inicio ${hhmm(T.t0)}</p><div class='tb'><button id='tpa'>${T.on?'Pausar':'Reanudar'}</button><button id='tsk'>Saltar fase</button><button id='tfin'>Terminar</button></div></div>`;
+ document.getElementById('tpa').onclick=()=>{if(T.on)T.on=false;else{T.on=true;T.end=Date.now()+T.left;T.last=Date.now()}drawRun()};
+ document.getElementById('tsk').onclick=()=>nxt(true);
+ document.getElementById('tfin').onclick=()=>fin();
+ upd()}
+function upd(){const a=document.getElementById('tm');if(!a)return;const p=T.seq[T.i];a.textContent=mmss(Math.ceil(T.left/1000));document.getElementById('tt').textContent=mmss(T.tot/1000);document.getElementById('tbar').style.width=Math.max(0,100-T.left/(p.s*10))+'%'}
+function nxt(skip){const p=T.seq[T.i];if(!skip&&p.f!==undefined)set('c'+T.day+'-'+p.f,true);T.i++;if(T.i>=T.seq.length){fin();return}const q=T.seq[T.i],n=Date.now();T.left=q.s*1000;T.end=n+T.left;T.last=n;T.ls=0;beep(880,.25);try{navigator.vibrate(200)}catch(e){}render()}
+function fin(){T.done=true;T.on=false;T.t1=new Date();try{T.wl&&T.wl.release()}catch(e){}beep(523,.5);try{navigator.vibrate([200,100,200])}catch(e){}render()}
+function drawEnd(){const d=DAYS[T.day];
+ document.getElementById('timer').innerHTML=`<div class='tp'><h2>Entrenamiento terminado</h2><p class='tn'>${d.n}: ${d.name}</p><p class='tn'>Inicio ${hhmm(T.t0)} · Fin ${hhmm(T.t1)}</p><p class='tn'>Tiempo total entrenando: <b>${mmss(T.tot/1000)}</b> · Fases completadas: ${Math.min(T.i,T.seq.length)} de ${T.seq.length}</p><div class='tb'><button id='tnew'>Cerrar</button></div></div>`;
+ document.getElementById('tnew').onclick=()=>{T.started=false;T.done=false;tPanel()}}
+setInterval(()=>{if(!T.started||T.done)return;const n=Date.now();if(T.on){T.tot+=n-T.last;T.left=T.end-n;const s=Math.ceil(T.left/1000);if(s<=3&&s>0&&s!==T.ls){T.ls=s;beep(660,.08)}}T.last=n;if(T.on&&T.left<=0){nxt();return}upd()},250);
 let cur=(new Date().getDay()+6)%7;
 function get(k){try{return localStorage.getItem(k)==="1"}catch(e){return false}}
 function set(k,v){try{v?localStorage.setItem(k,"1"):localStorage.removeItem(k)}catch(e){}}
@@ -222,7 +285,7 @@ function render(){
  if(open)h+="</ul>";
  const n=s.filter((x,j)=>get("c"+cur+"-"+j)).length;
  h+='<p class="prog">'+n+' de '+s.length+' pasos hechos</p><div class="tools"><span></span><button id="reset">Reiniciar la semana</button></div>';
- el.innerHTML=h;
+ el.innerHTML=h;tPanel();
  el.querySelectorAll("input").forEach(c=>c.onchange=()=>{set("c"+cur+"-"+c.dataset.j,c.checked);render()});
  el.querySelectorAll("select.sw").forEach(s=>s.onchange=()=>{const di=+s.dataset.di,m=+s.dataset.m;swap(di,m,s.value,DAYS[di].main[m].t);render()});
  document.getElementById("reset").onclick=()=>{DAYS.forEach((dd,i)=>steps(dd).forEach((x,j)=>set("c"+i+"-"+j,false)));render()};
