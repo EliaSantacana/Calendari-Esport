@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi semana de entrenamiento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef3f1;--card:#fff;--ink:#17302b;--mute:#5d726d;--line:#d3dfdb;--fz:#3b3fa8;--fzbg:#e6e7f8;--rn:#d9531e;--rnbg:#fbe6dc;--rs:#6f8680;--rsbg:#e2eae7;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1b18;--card:#172722;--ink:#e6f0ed;--mute:#9bb1ab;--line:#2a403a;--fz:#a3a6ff;--fzbg:#23254f;--rn:#ff8a5c;--rnbg:#4a2616;--rs:#93aaa4;--rsbg:#22332e}}
+:root[data-theme="dark"]{--bg:#0f1b18;--card:#172722;--ink:#e6f0ed;--mute:#9bb1ab;--line:#2a403a;--fz:#a3a6ff;--fzbg:#23254f;--rn:#ff8a5c;--rnbg:#4a2616;--rs:#93aaa4;--rsbg:#22332e}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Figtree,system-ui,sans-serif;line-height:1.5}
+main{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+h1,h2,h3{font-family:'Bricolage Grotesque',Figtree,system-ui,sans-serif;margin:0}
+h1{font-size:1.9rem;font-weight:800}
+.sub{color:var(--mute);margin:4px 0 18px}
+.strip{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px}
+.strip button{border:2px solid transparent;border-radius:12px;padding:8px 0 6px;font:inherit;cursor:pointer;color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:2px}
+.strip button b{font-family:'Bricolage Grotesque',sans-serif;font-size:1rem}
+.strip button span{font-size:.68rem;color:var(--mute)}
+.strip .fz{background:var(--fzbg)}.strip .rn{background:var(--rnbg)}.strip .rs{background:var(--rsbg)}
+.strip button[aria-selected="true"]{border-color:var(--ink)}
+.strip button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.strip button.done::after{content:"✓";font-size:.8rem;font-weight:700}
+.day{background:var(--card);border-radius:16px;padding:18px;border:1px solid var(--line)}
+.tag{display:inline-block;font-size:.8rem;font-weight:600;padding:2px 10px;border-radius:99px;margin-bottom:8px}
+.tag.fz{background:var(--fzbg);color:var(--fz)}.tag.rn{background:var(--rnbg);color:var(--rn)}.tag.rs{background:var(--rsbg);color:var(--rs)}
+.day h2{font-size:1.5rem}
+.meta{color:var(--mute);margin:2px 0 14px}
+.phase{font-family:'Bricolage Grotesque',sans-serif;font-weight:600;margin:16px 0 6px;color:var(--mute);font-size:.95rem}
+ul{list-style:none;margin:0;padding:0}
+li{border-top:1px solid var(--line)}
+label{display:flex;gap:12px;padding:11px 0;cursor:pointer;align-items:flex-start}
+input[type=checkbox]{width:22px;height:22px;margin-top:2px;accent-color:var(--fz);flex:none}
+label strong{display:block}
+label small{color:var(--mute);display:block}
+.fig{display:flex;gap:10px;margin-top:8px}.fig figure{margin:0;text-align:center;flex:0 1 150px}.fig svg{width:100%;height:auto;background:var(--bg);border-radius:10px}.fig figcaption{font-size:.72rem;color:var(--mute)}
+input:checked + div{opacity:.5;text-decoration:line-through}
+.prog{margin-top:14px;font-weight:600}
+.tools{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.tools button{font:inherit;background:none;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:6px 12px;cursor:pointer}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:.92rem}
+th,td{text-align:left;padding:8px 6px;border-top:1px solid var(--line)}
+th{color:var(--mute);font-weight:600}
+.wrap{overflow-x:auto}
+.box{margin-top:22px}
+.box h3{font-size:1.15rem}
+</style>
+</head>
+<body>
+<main>
+<h1>Mi semana de entrenamiento</h1>
+<p class="sub">Toca un día para ver qué hacer, paso a paso. Marca cada paso al terminarlo.</p>
+<div class="strip" id="strip" role="tablist" aria-label="Días de la semana"></div>
+<section class="day" id="day" aria-live="polite"></section>
+
+<div class="box">
+<h3>Progresión de las carreras (4 semanas)</h3>
+<div class="wrap"><table>
+<tr><th>Semana</th><th>Martes</th><th>Sábado</th></tr>
+<tr><td>1</td><td>7 × (2' trotar + 1' andar)</td><td>6 × (4' trotar + 1' andar)</td></tr>
+<tr><td>2</td><td>8 × (2' + 1')</td><td>7 × (4' + 1')</td></tr>
+<tr><td>3</td><td>6 × (3' + 1')</td><td>6 × (5' + 1')</td></tr>
+<tr><td>4</td><td>7 × (3' + 1')</td><td>5 × (6' + 1')</td></tr>
+</table></div>
+<p class="sub">En fuerza, cuando llegues al máximo de repeticiones en las 3 series con buena técnica, sube un poco el peso.</p>
+</div>
+</main>
+<script>
+const WARM_F=["Calentamiento: 5 min de bici o cinta a ritmo suave","Movilidad de cadera y hombros (2 min)"];
+const COOL_F=["Estiramientos suaves de lo trabajado (5 min)"];
+const E=(n,d,m)=>({t:n,d:d,m:m});
+const DAYS=[
+{k:"L",n:"Lunes",type:"fz",name:"Fuerza A: pierna y glúteo",meta:"45-50 min · descanso 60-90 s entre series",
+ warm:WARM_F.concat(["2 series ligeras de sentadilla goblet (8 reps)"]),
+ main:[E("Sentadilla goblet","3 × 10","Cuádriceps y glúteo"),E("Peso muerto rumano con mancuernas","3 × 10","Isquios y glúteo"),E("Zancada hacia atrás","3 × 10 por pierna","Cuádriceps y glúteo"),E("Hip thrust","3 × 10","Glúteo"),E("Elevación de talones de pie","3 × 15","Gemelos")],cool:COOL_F},
+{k:"M",n:"Martes",type:"rn",name:"Correr suave con intervalos",meta:"30-35 min · ritmo en el que puedas hablar",
+ warm:["Andar a paso ligero 5 min"],
+ main:[E("Intervalos","Semana 1: 7 × (2 min trotar + 1 min andar)","Mira la tabla de progresión de abajo")],cool:["Andar 5 min para bajar pulsaciones","Estirar gemelos, cuádriceps y glúteo (5 min)"]},
+{k:"X",n:"Miércoles",type:"fz",name:"Fuerza B: tren superior",meta:"45 min · descanso 60-90 s entre series",
+ warm:["Calentamiento: 5 min de remo o bici suave","Círculos de hombros y 1 serie ligera de press (10 reps)"],
+ main:[E("Press de banca con mancuernas","3 × 10","Pecho, hombro y tríceps"),E("Remo con mancuerna a una mano","3 × 10 por brazo","Dorsal y espalda media"),E("Press militar con mancuernas sentada","3 × 10","Hombros y tríceps"),E("Jalón al pecho en polea","3 × 10","Dorsal y bíceps"),E("Plancha","3 × 30-45 s","Core")],cool:["Estirar pecho, espalda y hombros (5 min)"]},
+{k:"J",n:"Jueves",type:"rs",name:"Descanso activo",meta:"Opcional",warm:[],
+ main:[E("Paseo tranquilo","30-40 min","Recuperación"),E("Movilidad o estiramientos","10 min","Cadera, gemelos y espalda")],cool:[]},
+{k:"V",n:"Viernes",type:"fz",name:"Fuerza C: cuerpo completo",meta:"45-50 min · descanso 60-90 s entre series",
+ warm:WARM_F,
+ main:[E("Prensa de piernas","3 × 12","Cuádriceps y glúteo"),E("Step-up al banco con mancuernas","3 × 8 por pierna","Glúteo y cuádriceps"),E("Flexiones (inclinadas si hace falta)","3 × 8-12","Pecho, hombro y tríceps"),E("Curl femoral tumbada","3 × 12","Isquios"),E("Plancha lateral","3 × 20-30 s por lado","Oblicuos y glúteo medio")],cool:COOL_F},
+{k:"S",n:"Sábado",type:"rn",name:"Correr: tirada larga",meta:"30-35 min · ritmo suave",
+ warm:["Andar a paso ligero 5 min"],
+ main:[E("Bloques","Semana 1: 6 × (4 min trotar + 1 min andar)","Mira la tabla de progresión de abajo")],cool:["Andar 5 min para bajar pulsaciones","Estirar gemelos, cuádriceps, isquios y glúteo (5 min)"]},
+{k:"D",n:"Domingo",type:"rs",name:"Descanso",meta:"Recuperación total",warm:[],
+ main:[E("Dormir bien y comer proteína","Todo el día","Aquí es donde ganas fuerza")],cool:[]}
+];
+const TAG={fz:"Fuerza",rn:"Correr",rs:"Descanso"};
+const ART={
+'Sentadilla goblet':{w:1,p:[[50,14,50,22,50,44,54,34,55,27,50,58,50,72],[54,20,52,28,38,54,56,40,58,33,58,60,50,72]]},
+'Peso muerto rumano con mancuernas':{w:1,p:[[50,14,50,22,50,44,50,34,50,45,50,58,50,72],[74,44,66,42,36,40,66,54,64,62,40,56,42,72]]},
+'Zancada hacia atrás':{w:1,p:[[50,14,50,22,50,44,50,34,50,45,50,58,50,72],[50,24,50,32,50,52,50,42,50,52,62,56,62,72,40,68,30,70]]},
+'Hip thrust':{b:[[8,48,28,4]],p:[[19,46,26,46,44,64,36,56,44,62,62,52,64,72],[19,46,26,46,46,48,36,50,46,48,64,48,64,72]]},
+'Elevación de talones de pie':{p:[[50,14,50,22,50,44,56,34,50,44,50,58,50,72],[50,9,50,17,50,39,56,29,50,39,50,53,50,67]]},
+'Press de banca con mancuernas':{w:1,b:[[14,50,62,4]],p:[[20,45,27,47,58,47,33,55,31,43,74,56,70,72],[20,45,27,47,58,47,27,36,27,24,74,56,70,72]]},
+'Remo con mancuerna a una mano':{w:1,b:[[18,52,34,4]],p:[[23,34,30,36,58,38,33,50,32,62,62,56,60,72],[23,34,30,36,58,38,44,37,44,48,62,56,60,72]]},
+'Press militar con mancuernas sentada':{w:1,b:[[28,52,26,4]],p:[[42,21,42,29,42,50,47,38,46,28,58,50,58,72],[42,21,42,29,42,50,44,16,44,5,58,50,58,72]]},
+'Jalón al pecho en polea':{b:[[26,54,26,4]],p:[[40,22,40,30,40,52,45,16,50,4,56,52,56,72],[40,22,40,30,40,52,44,42,50,32,56,52,56,72]]},
+'Plancha':{p:[[21,50,28,52,54,60,28,68,40,70,68,64,82,69]]},
+'Prensa de piernas':{p:[[12,36,18,40,30,58,24,52,30,56,44,44,56,54],[12,36,18,40,30,58,24,52,30,56,52,46,74,34]]},
+'Step-up al banco con mancuernas':{w:1,b:[[56,58,28,14]],p:[[48,17,48,25,46,46,47,36,47,46,60,50,64,58,46,60,44,72],[66,3,66,11,66,30,66,21,66,30,66,44,66,58,58,44,54,52]]},
+'Flexiones (inclinadas si hace falta)':{p:[[23,45,30,47,55,56,30,58,30,70,68,62,80,70],[23,60,30,61,55,65,42,66,30,70,68,68,80,70]]},
+'Curl femoral tumbada':{b:[[12,52,56,4]],p:[[14,47,21,48,50,48,26,56,18,56,66,48,82,48],[14,47,21,48,50,48,26,56,18,56,66,48,68,32]]},
+'Plancha lateral':{p:[[25,42,30,48,54,54,30,63,40,70,67,62,80,70]]}
+};
+function fig(t){const A=ART[t],C=['Inicio','Final'];const P=(s,w,o)=>`<polyline points='${s}' fill='none' stroke='var(--fz)' stroke-width='${w}' stroke-linecap='round' stroke-linejoin='round' opacity='${o}'/>`;
+return `<div class='fig'>`+A.p.map((a,i)=>{const q=(m,n)=>a[m]+','+a[n];
+let s=`<svg viewBox='0 0 100 80' role='img' aria-label='${t}'><line x1='0' y1='73' x2='100' y2='73' stroke='var(--line)' stroke-width='1.5'/>`;
+(A.b||[]).forEach(r=>{s+=`<rect x='${r[0]}' y='${r[1]}' width='${r[2]}' height='${r[3]}' rx='1.5' fill='var(--line)'/>`});
+if(a.length>14)s+=P(q(4,5)+' '+q(14,15)+' '+q(16,17),3.5,.4);
+s+=P(q(4,5)+' '+q(10,11)+' '+q(12,13),4,1)+P(q(2,3)+' '+q(4,5),4,1)+P(q(2,3)+' '+q(6,7)+' '+q(8,9),3.5,1);
+s+=`<circle cx='${a[0]}' cy='${a[1]}' r='5' fill='var(--card)' stroke='var(--fz)' stroke-width='3'/>`;
+if(A.w)s+=`<rect x='${a[8]-4}' y='${a[9]-2}' width='8' height='4' rx='1' fill='var(--ink)'/>`;
+return `<figure>${s}</svg><figcaption>${A.p.length>1?C[i]:'Posición'}</figcaption></figure>`}).join('')+`</div>`}
+let cur=(new Date().getDay()+6)%7;
+function get(k){try{return localStorage.getItem(k)==="1"}catch(e){return false}}
+function set(k,v){try{v?localStorage.setItem(k,"1"):localStorage.removeItem(k)}catch(e){}}
+function steps(d){
+ const a=[];d.warm.forEach(t=>a.push({t:t,d:"",ph:"Calentamiento"}));
+ d.main.forEach(e=>a.push({t:e.t,d:e.d+" · "+e.m,ph:"Parte principal",q:(d.type==="fz"?e.t:"")}));
+ d.cool.forEach(t=>a.push({t:t,d:"",ph:"Vuelta a la calma"}));
+ return a}
+function dayDone(i){const s=steps(DAYS[i]);return s.every((x,j)=>get("c"+i+"-"+j))}
+function render(){
+ const st=document.getElementById("strip");st.innerHTML="";
+ DAYS.forEach((d,i)=>{const b=document.createElement("button");b.className=d.type+(dayDone(i)?" done":"");b.setAttribute("role","tab");b.setAttribute("aria-selected",i===cur);
+  b.innerHTML="<b>"+d.k+"</b><span>"+TAG[d.type]+"</span>";b.onclick=()=>{cur=i;render()};st.appendChild(b)});
+ const d=DAYS[cur],s=steps(d),el=document.getElementById("day");
+ let h='<span class="tag '+d.type+'">'+TAG[d.type]+'</span><h2>'+d.n+': '+d.name+'</h2><p class="meta">'+d.meta+'</p>';
+ let last="",open=false;
+ s.forEach((x,j)=>{if(x.ph!==last){if(open)h+="</ul>";h+='<p class="phase">'+x.ph+'</p><ul>';last=x.ph;open=true}
+  h+='<li><label><input type="checkbox" data-j="'+j+'"'+(get("c"+cur+"-"+j)?" checked":"")+'><div><strong>'+x.t+'</strong>'+(x.d?'<small>'+x.d+'</small>':'')+(ART[x.t]?fig(x.t):'')+'</div></label></li>'});
+ if(open)h+="</ul>";
+ const n=s.filter((x,j)=>get("c"+cur+"-"+j)).length;
+ h+='<p class="prog">'+n+' de '+s.length+' pasos hechos</p><div class="tools"><span></span><button id="reset">Reiniciar la semana</button></div>';
+ el.innerHTML=h;
+ el.querySelectorAll("input").forEach(c=>c.onchange=()=>{set("c"+cur+"-"+c.dataset.j,c.checked);render()});
+ document.getElementById("reset").onclick=()=>{DAYS.forEach((dd,i)=>steps(dd).forEach((x,j)=>set("c"+i+"-"+j,false)));render()};
+}
+render();
+</script>
+</body>
+</html>
